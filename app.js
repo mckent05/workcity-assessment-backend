@@ -1,0 +1,39 @@
+require("dotenv").config()
+require('express-async-errors');
+
+const express = require("express")
+const connectDB = require("./config/db")
+const authRouter = require("./routes/auth")
+const errorHandlerMiddleware = require("./middleWare/errorHandler")
+const authenticationHandler = require("./middleWare/authenticationHandler")
+// const jobRoutes = require("./routes/jobs")
+const notFound = require("./middleWare/notFound")
+const app = express()
+let connectionString = process.env.MONGO_URI
+connectionString = connectionString.replace("<password>", encodeURIComponent(process.env.password))
+
+const PORT = 3000
+
+
+
+app.use(express.json())
+app.use("/api/v1/auth", authRouter)
+// app.use("/api/v1/jobs", authenticationHandler, jobRoutes)
+app.use(errorHandlerMiddleware)
+app.use(notFound)
+
+
+
+const start = async () => {
+    try {
+        await connectDB(connectionString)
+        app.listen(PORT, () => {
+            console.log(`Server is runnning on ${PORT}...`)
+        })
+    }
+    catch(err) {
+        console.log(err)
+    }
+}
+
+start()
