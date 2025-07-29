@@ -16,3 +16,5 @@ const projectSchema = new mongoose.Schema({
     default: 'pending' }
 });
 const Project = mongoose.model('Project', projectSchema);
+
+module.exports = Project

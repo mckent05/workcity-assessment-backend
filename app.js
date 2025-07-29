@@ -6,7 +6,8 @@ const connectDB = require("./config/db")
 const authRouter = require("./routes/auth")
 const errorHandlerMiddleware = require("./middleWare/errorHandler")
 const authenticationHandler = require("./middleWare/authenticationHandler")
-// const jobRoutes = require("./routes/jobs")
+const clientRoutes = require("./routes/clients")
+const projectRoutes = require("./routes/projects")
 const notFound = require("./middleWare/notFound")
 const app = express()
 let connectionString = process.env.MONGO_URI
@@ -18,7 +19,8 @@ const PORT = 3000
 
 app.use(express.json())
 app.use("/api/v1/auth", authRouter)
-// app.use("/api/v1/jobs", authenticationHandler, jobRoutes)
+app.use("/api/v1/clients", authenticationHandler, clientRoutes)
+app.use("/api/v1/projects", authenticationHandler, projectRoutes)
 app.use(errorHandlerMiddleware)
 app.use(notFound)
 

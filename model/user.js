@@ -43,7 +43,7 @@ UserSchema.methods.createJWT = async function () {
       name: this.name,
     },
     process.env.JWT_SECRET,
-    { expiresIn: "1h" }
+    { expiresIn: "24h" }
   );
 };
 

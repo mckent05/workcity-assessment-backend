@@ -9,11 +9,11 @@ const { StatusCodes } = require("http-status-codes");
 const getAllClients = async (req, res) => {
   try {
     const clients = await Client.find();
-    res.status(StatusCodes.OK).json(clients);
+    res.status(StatusCodes.OK).json({ data: clients });
   } catch (err) {
-    res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json(InternalServerError("Server error"));
+    console.error(err);
+    const error = new InternalServerError("Server error");
+    res.status(error.statusCode).json({ error: error.message });
   }
 };
 
@@ -21,11 +21,11 @@ const createClient = async (req, res) => {
   try {
     const client = new Client(req.body);
     await client.save();
-    res.status(201).json(client);
+    res.status(StatusCodes.CREATED).json({ data: client });
   } catch (err) {
-    res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json(InternalServerError("Server error"));
+    console.error(err);
+    const error = new InternalServerError("Server error");
+    res.status(error.statusCode).json({ error: error.message });
   }
 };
 
@@ -35,15 +35,15 @@ const getClient = async (req, res) => {
   } = req;
   try {
     const client = await Client.findById(clientId);
-    if (!client)
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .json(NotfoundError(`No client with id: ${clientId}`));
-    res.status(StatusCodes.OK).json(client);
+    if (!client) {
+      const error = new NotfoundError(`No client with id: ${clientId}`);
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+    res.status(StatusCodes.OK).json({ data: client });
   } catch (err) {
-    res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json(InternalServerError("Server error"));
+    console.error(err);
+    const error = new InternalServerError("Server error");
+    res.status(error.statusCode).json({ error: error.msg });
   }
 };
 
@@ -53,38 +53,41 @@ const updateClient = async (req, res) => {
     params: { id: clientId },
   } = req;
   if (name === "" || email === "") {
-    return BadRequestError("Please add a value for both name and email");
+    const error = new BadRequestError("Please provide a name and email");
+    return res.status(error.statusCode).json({ error: error.message });
   }
   try {
     const client = await Client.findByIdAndUpdate(clientId, req.body, {
       new: true,
     });
-    if (!client)
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .json(NotfoundError(`No client with id: ${clientId}`));
-    res.status(StatusCodes.OK).json(client);
+    if (!client) {
+      const error = new NotfoundError(`No client with id: ${clientId}`);
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+    res.status(StatusCodes.OK).json({ data: client });
   } catch (err) {
-    res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json(InternalServerError("Server error"));
+    console.error(err);
+    const error = new InternalServerError("Server error");
+    res.status(error.statusCode).json({ error: error.msg });
   }
 };
 
 const deleteClient = async (req, res) => {
   const {
-    user: { userId },
-    params: { id: jobId },
+    params: { id: clientId },
   } = req;
-
-  const foundJob = await Job.findByIdAndDelete({
-    _id: jobId,
-    userId,
-  });
-  if (!foundJob) {
-    throw NotfoundError(`No job with id: ${jobId}`);
+  try {
+    const client = await Client.findByIdAndDelete(clientId);
+    if (!client) {
+      const error = new NotfoundError(`No client with id: ${clientId}`);
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+    res.json({ message: "Client deleted successfully!" });
+  } catch (err) {
+    console.error(err);
+    const error = new InternalServerError("Server error");
+    res.status(error.statusCode).json({ error: error.msg });
   }
-  res.status(StatusCodes.OK).json("Job deleted successfully");
 };
 
 module.exports = {
