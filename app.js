@@ -4,6 +4,7 @@ require('express-async-errors');
 const express = require("express")
 const connectDB = require("./config/db")
 const authRouter = require("./routes/auth")
+const cors = require('cors');
 const errorHandlerMiddleware = require("./middleWare/errorHandler")
 const authenticationHandler = require("./middleWare/authenticationHandler")
 const clientRoutes = require("./routes/clients")
@@ -16,7 +17,7 @@ connectionString = connectionString.replace("<password>", encodeURIComponent(pro
 const PORT = 3000
 
 
-
+app.use(cors());
 app.use(express.json())
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/clients", authenticationHandler, clientRoutes)
