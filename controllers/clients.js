@@ -2,8 +2,11 @@ const {
   BadRequestError,
   NotfoundError,
   InternalServerError,
+  UnAuthenticatedError,
 } = require("../Error");
 const Client = require("../model/client");
+const User = require("../model/user");
+const Project = require("../model/project");
 const { StatusCodes } = require("http-status-codes");
 
 const getAllClients = async (req, res) => {
@@ -75,13 +78,24 @@ const updateClient = async (req, res) => {
 const deleteClient = async (req, res) => {
   const {
     params: { id: clientId },
+    user: { userId },
   } = req;
   try {
-    const client = await Client.findByIdAndDelete(clientId);
+    const user = await User.findById(userId);
+    if (!user.isAdmin()) {
+      const error = new UnAuthenticatedError(
+        "You are not authorized to perform this action"
+      );
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+    const client = await Client.findById(clientId);
     if (!client) {
       const error = new NotfoundError(`No client with id: ${clientId}`);
       return res.status(error.statusCode).json({ error: error.message });
     }
+    await Project.deleteMany({ client });
+
+    await Client.findByIdAndDelete(clientId);
     res.json({ message: "Client deleted successfully!" });
   } catch (err) {
     console.error(err);

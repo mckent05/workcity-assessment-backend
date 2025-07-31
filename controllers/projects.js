@@ -2,14 +2,16 @@ const {
   BadRequestError,
   NotfoundError,
   InternalServerError,
+  UnAuthenticatedError,
 } = require("../Error");
 const Project = require("../model/project");
 const { StatusCodes } = require("http-status-codes");
+const User = require("../model/user");
 
 const getAllProjects = async (req, res) => {
   try {
     const projects = await Project.find().populate("client");
-    res.status(StatusCodes.OK).json(projects);
+    res.status(StatusCodes.OK).json({ data: projects });
   } catch (err) {
     console.error(err);
     const error = new InternalServerError("Server error");
@@ -21,7 +23,7 @@ const createProject = async (req, res) => {
   try {
     const project = new Project(req.body);
     await project.save();
-    res.status(StatusCodes.CREATED).json(project);
+    res.status(StatusCodes.CREATED).json({ data: project });
   } catch (err) {
     console.error(err);
     const error = new InternalServerError("Server error");
@@ -39,7 +41,7 @@ const getProject = async (req, res) => {
       const error = new NotfoundError(`No project with id: ${projectId}`);
       return res.status(error.statusCode).json({ error: error.message });
     }
-    res.status(StatusCodes.OK).json(project);
+    res.status(StatusCodes.OK).json({ data: project });
   } catch (err) {
     console.error(err);
     const error = new InternalServerError("Server error");
@@ -64,7 +66,7 @@ const updateProject = async (req, res) => {
       const error = new NotfoundError(`No project with id: ${projectId}`);
       return res.status(error.statusCode).json({ error: error.message });
     }
-    res.status(StatusCodes.OK).json(project);
+    res.status(StatusCodes.OK).json({ data: project });
   } catch (err) {
     console.error(err);
     const error = new InternalServerError("Server error");
@@ -75,8 +77,16 @@ const updateProject = async (req, res) => {
 const deleteProject = async (req, res) => {
   const {
     params: { id: projectId },
+    user: { userId },
   } = req;
   try {
+    const user = await User.findById(userId);
+    if (!user.isAdmin()) {
+      const error = new UnAuthenticatedError(
+        "You are not authorized to perform this action"
+      );
+      return res.status(error.statusCode).json({ error: error.message });
+    }
     const project = await Project.findByIdAndDelete(projectId);
     if (!project) {
       const error = new NotfoundError(`No project with id: ${projectId}`);
@@ -98,7 +108,7 @@ const projectByClient = async (req, res) => {
     const projects = await Project.find({
       client: clientId,
     }).populate("client");
-    res.status(StatusCodes.OK).json(projects);
+    res.status(StatusCodes.OK).json({ data: projects });
   } catch (err) {
     console.error(err);
     const error = new InternalServerError("Server error");

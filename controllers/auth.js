@@ -46,11 +46,11 @@ const login = async (req, res) => {
     throw new UnAuthenticatedError("Invalid Credentials");
   }
   const token = await user.createJWT();
-  res.status(StatusCodes.OK).json({ token });
+  res.status(StatusCodes.OK).json({ token, user });
 };
 
 module.exports = {
   login,
   register,
-  validateRegister
+  validateRegister,
 };
